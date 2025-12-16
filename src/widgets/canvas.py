@@ -10,12 +10,13 @@ class EditorCanvas(QGraphicsView):
     def __init__(self):
         super().__init__()
         self.scene = QGraphicsScene(self)
+        self.setMouseTracking(True)
+
         self.setScene(self.scene)
         self.scene.setSceneRect(0, 0, 800, 600)
 
         self.setRenderHint(self.renderHints() | QPainter.RenderHint.Antialiasing)
         self.setAlignment(Qt.AlignCenter)
-        self.scene.addText("Hello, Vector World!").setPos(350, 280)
 
         self.tools = {
             "select": SelectionTool(self),
@@ -29,12 +30,13 @@ class EditorCanvas(QGraphicsView):
         self.start_point = None
 
     def set_tool(self, tool_name):
-        self.active_tool = self.tools[tool_name]
+        if tool_name in self.tools:
+            self.active_tool = self.tools[tool_name]
 
-        if tool_name == "select":
-            self.setCursor(Qt.ArrowCursor)
-        else:
-            self.setCursor(Qt.CrossCursor)
+            if tool_name == "select":
+                self.setCursor(Qt.ArrowCursor)
+            else:
+                self.setCursor(Qt.CrossCursor)
 
     def mousePressEvent(self, event):
         self.active_tool.mouse_press(event)

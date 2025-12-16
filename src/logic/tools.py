@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QGraphicsView
 
 from src.logic.factory import ShapeFactory
 
@@ -25,35 +26,40 @@ class CreationTool(Tool):
         super().__init__(view)
         self.shape_type = shape_type
         self.color = color
-
         self.start_pos = None
         self.temp_shape = None
 
     def mouse_press(self, event):
-        if event.button() == Qt.LeftButton:
-            self.start_pos = self.view.mapToScene(event.pos())
+        if event.button() != Qt.LeftButton:
+            QGraphicsView.mousePressEvent(self.view, event)
+            return
 
-            try:
-                self.temp_shape = ShapeFactory.create_shape(
-                    self.shape_type,
-                    self.start_pos,
-                    self.start_pos,
-                    self.color
-                )
-                self.scene.addItem(self.temp_shape)
-            except ValueError:
-                pass
+        self.start_pos = self.view.mapToScene(event.pos())
+
+        self.temp_shape = ShapeFactory.create_shape(
+            self.shape_type,
+            self.start_pos,
+            self.start_pos,
+            self.color
+        )
+        self.scene.addItem(self.temp_shape)
 
     def mouse_move(self, event):
-        if self.temp_shape and self.start_pos:
+        if self.temp_shape and (event.buttons() and Qt.LeftButton):
             current_pos = self.view.mapToScene(event.pos())
-
             self.temp_shape.set_geometry(self.start_pos, current_pos)
+        else:
+            QGraphicsView.mouseMoveEvent(self.view, event)
 
     def mouse_release(self, event):
-        if event.button() == Qt.LeftButton:
+        if self.temp_shape and event.button() == Qt.LeftButton:
+            end_pos = self.view.mapToScene(event.pos())
+            self.temp_shape.set_geometry(self.start_pos, end_pos)
+
             self.start_pos = None
             self.temp_shape = None
+        else:
+            QGraphicsView.mouseReleaseEvent(self.view, event)
 
 
 class SelectionTool(Tool):
@@ -61,7 +67,15 @@ class SelectionTool(Tool):
         super(type(self.view), self.view).mousePressEvent(event)
 
     def mouse_move(self, event):
-        super(type(self.view), self.view).mouseMoveEvent(event)
+        QGraphicsView.mouseMoveEvent(self.view, event)
+
+        item = self.view.itemAt(event.pos())
+
+        if not (event.buttons() & Qt.LeftButton):
+            if item:
+                self.view.setCursor(Qt.OpenHandCursor)
+            else:
+                self.view.setCursor(Qt.ArrowCursor)
 
     def mouse_release(self, event):
         super(type(self.view), self.view).mouseReleaseEvent(event)
