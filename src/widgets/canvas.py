@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter
 
 from src.logic.factory import ShapeFactory
+from src.logic.tools import SelectionTool, CreationTool
 
 
 class EditorCanvas(QGraphicsView):
@@ -16,39 +17,32 @@ class EditorCanvas(QGraphicsView):
         self.setAlignment(Qt.AlignCenter)
         self.scene.addText("Hello, Vector World!").setPos(350, 280)
 
-        self.active_tool = "line"
+        self.tools = {
+            "select": SelectionTool(self),
+            "rect": CreationTool(self, "rect"),
+            "line": CreationTool(self, "line"),
+            "ellipse": CreationTool(self, "ellipse")
+        }
+        self.active_tool = self.tools["select"]
         self.active_color = "black"
 
         self.start_point = None
 
     def set_tool(self, tool_name):
-        self.active_tool = tool_name
+        self.active_tool = self.tools[tool_name]
+
+        if tool_name == "select":
+            self.setCursor(Qt.ArrowCursor)
+        else:
+            self.setCursor(Qt.CrossCursor)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.start_point = self.mapToScene(event.pos())
+        self.active_tool.mouse_press(event)
 
-        super().mousePressEvent(event)
+    def mouseMoveEvent(self, event):
+        self.active_tool.mouse_move(event)
 
     def mouseReleaseEvent(self, event):
-        if self.start_point and event.button() == Qt.LeftButton:
-            end_point = self.mapToScene(event.pos())
-
-            try:
-                new_shape = ShapeFactory.create_shape(
-                    self.active_tool,
-                    self.start_point,
-                    end_point,
-                    self.active_color
-                )
-                self.scene.addItem(new_shape)
-                print(f"Создана фигура: {self.active_tool}")
-
-            except ValueError:
-                pass
-            finally:
-                self.start_point = None
-
-        super().mouseReleaseEvent(event)
+        self.active_tool.mouse_release(event)
 
 

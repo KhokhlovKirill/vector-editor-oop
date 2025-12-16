@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+
+from PySide6.QtCore import QPointF
 from PySide6.QtWidgets import QGraphicsPathItem
 from PySide6.QtGui import QPen, QColor
 
@@ -38,3 +40,11 @@ class Shape(QGraphicsPathItem):
         """Динамическое изменение цвета"""
         self.color = color
         self._setup_pen()
+
+    @abstractmethod
+    def set_geometry(self, start_point: QPointF, end_point: QPointF):
+        """
+        Метод для динамического обновления формы фигуры.
+        Принимает две точки (старт рисования и текущее положение мыши).
+        """
+        pass
