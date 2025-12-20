@@ -15,7 +15,8 @@ class Group(QGraphicsItemGroup):
 
     @property
     def type_name(self) -> str:
-        return "group"
+        from src.constants import TYPE_GROUP
+        return TYPE_GROUP
 
     def set_geometry(self, start: QPointF, end: QPointF):
         pass

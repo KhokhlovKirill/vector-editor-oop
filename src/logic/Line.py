@@ -1,10 +1,11 @@
 from PySide6.QtGui import QPainterPath
 
+from src.constants import DEFAULT_COLOR, DEFAULT_STROKE_WIDTH
 from src.logic.Shape import Shape
 
 
 class Line(Shape):
-    def __init__(self, x1, y1, x2, y2, color="black", stroke_width=2):
+    def __init__(self, x1, y1, x2, y2, color=DEFAULT_COLOR, stroke_width=DEFAULT_STROKE_WIDTH):
         super().__init__(color, stroke_width)
         self.x1 = x1
         self.y1 = y1
@@ -22,7 +23,8 @@ class Line(Shape):
 
     @property
     def type_name(self) -> str:
-        return "line"
+        from src.constants import TYPE_LINE
+        return TYPE_LINE
 
     def to_dict(self) -> dict:
         return {

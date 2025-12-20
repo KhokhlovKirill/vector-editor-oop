@@ -2,6 +2,10 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel,
                                QSpinBox, QPushButton, QFrame, QColorDialog, QHBoxLayout, QDoubleSpinBox)
 from PySide6.QtCore import Qt
 
+from src.constants import (
+    PROPERTIES_PANEL_WIDTH, PANEL_BG_COLOR, MIN_STROKE_WIDTH, MAX_STROKE_WIDTH,
+    DEFAULT_COLOR_HEX, MIN_COORDINATE, MAX_COORDINATE
+)
 from src.logic.commands import ChangeColorCommand, ChangeWidthCommand
 
 
@@ -16,8 +20,8 @@ class PropertiesPanel(QWidget):
         self.scene.selectionChanged.connect(self.on_selection_changed)
 
     def _init_ui(self):
-        self.setFixedWidth(200)
-        self.setStyleSheet("background-color: #f0f0f0; border-left: 1px solid #ccc;")
+        self.setFixedWidth(PROPERTIES_PANEL_WIDTH)
+        self.setStyleSheet(f"background-color: {PANEL_BG_COLOR}; border-left: 1px solid #ccc;")
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignTop)
@@ -32,7 +36,7 @@ class PropertiesPanel(QWidget):
 
         layout.addWidget(QLabel("Толщина обводки:"))
         self.spin_width = QSpinBox()
-        self.spin_width.setRange(1, 50)  # Мин 1, Макс 50 пикселей
+        self.spin_width.setRange(MIN_STROKE_WIDTH, MAX_STROKE_WIDTH)
         self.spin_width.valueChanged.connect(self.on_width_changed)
         layout.addWidget(self.spin_width)
 
@@ -43,12 +47,12 @@ class PropertiesPanel(QWidget):
         geo_layout = QHBoxLayout()
 
         self.spin_x = QDoubleSpinBox()
-        self.spin_x.setRange(-10000, 10000)
+        self.spin_x.setRange(MIN_COORDINATE, MAX_COORDINATE)
         self.spin_x.setPrefix("X: ")
         self.spin_x.valueChanged.connect(self.on_geo_changed)
 
         self.spin_y = QDoubleSpinBox()
-        self.spin_y.setRange(-10000, 10000)
+        self.spin_y.setRange(MIN_COORDINATE, MAX_COORDINATE)
         self.spin_y.setPrefix("Y: ")
         self.spin_y.valueChanged.connect(self.on_geo_changed)
 
@@ -70,7 +74,7 @@ class PropertiesPanel(QWidget):
 
         if not selected_items:
             self.setEnabled(False)
-            self.spin_width.setValue(1)
+            self.spin_width.setValue(MIN_STROKE_WIDTH)
             self.btn_color.setStyleSheet("background-color: transparent")
             return
 
@@ -78,8 +82,8 @@ class PropertiesPanel(QWidget):
 
         item = selected_items[0]
 
-        current_width = 1
-        current_color = "#000000"
+        current_width = MIN_STROKE_WIDTH
+        current_color = DEFAULT_COLOR_HEX
 
         if hasattr(item, "pen") and item.pen() is not None:
             current_width = item.pen().width()
@@ -166,9 +170,9 @@ class PropertiesPanel(QWidget):
             # Для Group пытаемся получить толщину от первого ребенка
             if hasattr(item, "childItems"):
                 children = item.childItems()
-                if children:
-                    return get_width(children[0])
-            return 1  # Дефолтное значение
+            if children:
+                return get_width(children[0])
+            return MIN_STROKE_WIDTH
 
         for i, item in enumerate(selected_items):
             w = get_width(item)

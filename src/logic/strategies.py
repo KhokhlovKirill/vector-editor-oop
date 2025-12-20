@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QImage, QColor, QPainter
 
+from src.constants import PROJECT_VERSION, BG_COLOR_WHITE
+
 
 class SaveStrategy(ABC):
     @abstractmethod
@@ -18,7 +20,7 @@ class SaveStrategy(ABC):
 class JsonSaveStrategy(SaveStrategy):
     def save(self, filename, scene):
         data = {
-            "version": "1.0",
+            "version": PROJECT_VERSION,
             "scene": {
                 "width": scene.width(),
                 "height": scene.height()
@@ -37,7 +39,7 @@ class JsonSaveStrategy(SaveStrategy):
 
 
 class ImageSaveStrategy(SaveStrategy):
-    def __init__(self, format_name="PNG", background_color="white"):
+    def __init__(self, format_name="PNG", background_color=BG_COLOR_WHITE):
         self.format_name = format_name  # PNG, JPG
         self.bg_color = background_color
 

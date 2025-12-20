@@ -1,5 +1,7 @@
 from PySide6.QtGui import QUndoCommand
 
+from src.constants import DEFAULT_COLOR_HEX, MIN_STROKE_WIDTH
+
 
 class AddShapeCommand(QUndoCommand):
     def __init__(self, scene, item):
@@ -60,7 +62,7 @@ class ChangeColorCommand(QUndoCommand):
         if hasattr(item, "pen"):
             self.old_color = item.pen().color().name()
         else:
-            self.old_color = "#000000"  # Fallback
+            self.old_color = DEFAULT_COLOR_HEX
 
         self.setText(f"Change Color to {new_color}")
 
@@ -82,7 +84,7 @@ class ChangeWidthCommand(QUndoCommand):
         if hasattr(item, "pen"):
             self.old_width = item.pen().width()
         else:
-            self.old_width = 1
+            self.old_width = MIN_STROKE_WIDTH
 
         self.setText(f"Change Width to {new_width}")
 

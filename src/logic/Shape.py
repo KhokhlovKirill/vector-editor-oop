@@ -4,9 +4,11 @@ from PySide6.QtCore import QPointF
 from PySide6.QtWidgets import QGraphicsPathItem
 from PySide6.QtGui import QPen, QColor
 
+from src.constants import DEFAULT_COLOR, DEFAULT_STROKE_WIDTH
+
 
 class Shape(QGraphicsPathItem):
-    def __init__(self, color: str = "black", stroke_width: int = 2):
+    def __init__(self, color: str = DEFAULT_COLOR, stroke_width: int = DEFAULT_STROKE_WIDTH):
         super().__init__()
 
         self.color = color
@@ -25,7 +27,6 @@ class Shape(QGraphicsPathItem):
         self.setFlag(QGraphicsPathItem.GraphicsItemFlag.ItemIsMovable)
         self.setFlag(QGraphicsPathItem.GraphicsItemFlag.ItemSendsGeometryChanges)
 
-
     @property
     @abstractmethod
     def type_name(self) -> str:
@@ -34,7 +35,6 @@ class Shape(QGraphicsPathItem):
     @abstractmethod
     def to_dict(self) -> dict:
         pass
-
 
     def set_active_color(self, color: str):
         self.color = color

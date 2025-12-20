@@ -2,6 +2,10 @@ from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QUndoStack
 
+from src.constants import (
+    DEFAULT_SCENE_WIDTH, DEFAULT_SCENE_HEIGHT, UNDO_STACK_LIMIT,
+    TYPE_SELECT, TYPE_RECT, TYPE_LINE, TYPE_ELLIPSE, DEFAULT_COLOR
+)
 from src.logic.Group import Group
 from src.logic.commands import DeleteCommand
 from src.logic.factory import ShapeFactory
@@ -15,22 +19,22 @@ class EditorCanvas(QGraphicsView):
         self.setMouseTracking(True)
 
         self.undo_stack = QUndoStack(self)
-        self.undo_stack.setUndoLimit(50)
+        self.undo_stack.setUndoLimit(UNDO_STACK_LIMIT)
 
         self.setScene(self.scene)
-        self.scene.setSceneRect(0, 0, 800, 600)
+        self.scene.setSceneRect(0, 0, DEFAULT_SCENE_WIDTH, DEFAULT_SCENE_HEIGHT)
 
         self.setRenderHint(self.renderHints() | QPainter.RenderHint.Antialiasing)
         self.setAlignment(Qt.AlignCenter)
 
         self.tools = {
-            "select": SelectionTool(self, self.undo_stack),
-            "rect": CreationTool(self, "rect", self.undo_stack),
-            "line": CreationTool(self, "line", self.undo_stack),
-            "ellipse": CreationTool(self, "ellipse", self.undo_stack)
+            TYPE_SELECT: SelectionTool(self, self.undo_stack),
+            TYPE_RECT: CreationTool(self, TYPE_RECT, self.undo_stack),
+            TYPE_LINE: CreationTool(self, TYPE_LINE, self.undo_stack),
+            TYPE_ELLIPSE: CreationTool(self, TYPE_ELLIPSE, self.undo_stack)
         }
-        self.active_tool = self.tools["select"]
-        self.active_color = "black"
+        self.active_tool = self.tools[TYPE_SELECT]
+        self.active_color = DEFAULT_COLOR
 
         self.start_point = None
 
@@ -38,7 +42,7 @@ class EditorCanvas(QGraphicsView):
         if tool_name in self.tools:
             self.active_tool = self.tools[tool_name]
 
-            if tool_name == "select":
+            if tool_name == TYPE_SELECT:
                 self.setCursor(Qt.ArrowCursor)
             else:
                 self.setCursor(Qt.CrossCursor)
@@ -69,7 +73,6 @@ class EditorCanvas(QGraphicsView):
             group.addToGroup(item)
 
         group.setSelected(True)
-        print("Группа создана")
 
     def ungroup_selection(self):
         """Разбивает выделенные группы на отдельные элементы"""
@@ -78,7 +81,6 @@ class EditorCanvas(QGraphicsView):
         for item in selected_items:
             if isinstance(item, Group):
                 self.scene.destroyGroup(item)
-                print("Группа расформирована")
 
     def delete_selected(self):
         selected = self.scene.selectedItems()

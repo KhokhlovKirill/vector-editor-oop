@@ -1,9 +1,11 @@
 from PySide6.QtGui import QPainterPath
+
+from src.constants import DEFAULT_COLOR, DEFAULT_STROKE_WIDTH
 from src.logic.Shape import Shape
 
 
 class Rectangle(Shape):
-    def __init__(self, x, y, w, h, color="black", stroke_width=2):
+    def __init__(self, x, y, w, h, color=DEFAULT_COLOR, stroke_width=DEFAULT_STROKE_WIDTH):
         super().__init__(color, stroke_width)
 
         self.x = x
@@ -22,7 +24,8 @@ class Rectangle(Shape):
 
     @property
     def type_name(self) -> str:
-        return "rect"
+        from src.constants import TYPE_RECT
+        return TYPE_RECT
 
     def to_dict(self) -> dict:
         return {

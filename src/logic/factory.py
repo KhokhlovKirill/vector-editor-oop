@@ -1,7 +1,9 @@
+from src.constants import TYPE_LINE, TYPE_RECT, TYPE_ELLIPSE, TYPE_GROUP, DEFAULT_COLOR
 from src.logic.Ellipse import Ellipse
 from src.logic.Group import Group
 from src.logic.Line import Line
 from src.logic.Rectangle import Rectangle
+
 
 class ShapeFactory:
     @staticmethod
@@ -9,7 +11,7 @@ class ShapeFactory:
         x1, y1 = start_point.x(), start_point.y()
         x2, y2 = end_point.x(), end_point.y()
 
-        if shape_type == 'line':
+        if shape_type == TYPE_LINE:
             return Line(x1, y1, x2, y2, color)
 
         x = min(x1, x2)
@@ -17,9 +19,9 @@ class ShapeFactory:
         w = abs(x2 - x1)
         h = abs(y2 - y1)
 
-        if shape_type == 'rect':
+        if shape_type == TYPE_RECT:
             return Rectangle(x, y, w, h, color)
-        elif shape_type == 'ellipse':
+        elif shape_type == TYPE_ELLIPSE:
             return Ellipse(x, y, w, h, color)
         else:
             raise ValueError(f"Неизвестный тип фигуры: {shape_type}")
@@ -31,9 +33,9 @@ class ShapeFactory:
         """
         shape_type = data.get("type")
 
-        if shape_type == "group":
+        if shape_type == TYPE_GROUP:
             return ShapeFactory._create_group(data)
-        elif shape_type in ["rect", "line", "ellipse"]:
+        elif shape_type in [TYPE_RECT, TYPE_LINE, TYPE_ELLIPSE]:
             return ShapeFactory._create_primitive(data)
         else:
             raise ValueError(f"Unknown type: {shape_type}")
@@ -43,16 +45,16 @@ class ShapeFactory:
         props = data.get("props", {})
         shape_type = data.get("type")
 
-        if shape_type == "rect":
-            color = props.get("color", "black")
+        if shape_type == TYPE_RECT:
+            color = props.get("color", DEFAULT_COLOR)
             obj = Rectangle(props['x'], props['y'], props['w'], props['h'], color)
 
-        elif shape_type == "line":
-            color = props.get("color", "black")
+        elif shape_type == TYPE_LINE:
+            color = props.get("color", DEFAULT_COLOR)
             obj = Line(props['x1'], props['y1'], props['x2'], props['y2'], color)
 
-        elif shape_type == "ellipse":
-            color = props.get("color", "black")
+        elif shape_type == TYPE_ELLIPSE:
+            color = props.get("color", DEFAULT_COLOR)
             obj = Ellipse(props['x'], props['y'], props['w'], props['h'], color)
 
         if "pos" in data:

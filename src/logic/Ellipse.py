@@ -1,10 +1,11 @@
 from PySide6.QtGui import QPainterPath
 
+from src.constants import DEFAULT_COLOR, DEFAULT_STROKE_WIDTH
 from src.logic.Shape import Shape
 
 
 class Ellipse(Shape):
-    def __init__(self, x, y, w, h, color="black", stroke_width=2):
+    def __init__(self, x, y, w, h, color=DEFAULT_COLOR, stroke_width=DEFAULT_STROKE_WIDTH):
         super().__init__(color, stroke_width)
         self.x = x
         self.y = y
@@ -20,7 +21,8 @@ class Ellipse(Shape):
 
     @property
     def type_name(self) -> str:
-        return "ellipse"
+        from src.constants import TYPE_ELLIPSE
+        return TYPE_ELLIPSE
 
     def to_dict(self) -> dict:
         # Код идентичен Rectangle, можно было бы вынести в общий класс-предок

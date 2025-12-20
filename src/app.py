@@ -4,6 +4,11 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QVBoxLa
     QMessageBox
 from PySide6.QtGui import QAction, QKeySequence
 
+from src.constants import (
+    WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, DEFAULT_SCENE_WIDTH, DEFAULT_SCENE_HEIGHT,
+    TYPE_LINE, TYPE_RECT, TYPE_ELLIPSE, TYPE_SELECT, TOOLS_PANEL_WIDTH, PROPERTIES_PANEL_WIDTH,
+    PANEL_BG_COLOR, SAVE_FILTERS, BG_COLOR_WHITE, BG_COLOR_TRANSPARENT, PROJECT_VERSION
+)
 from src.logic.factory import ShapeFactory
 from src.logic.strategies import ImageSaveStrategy, JsonSaveStrategy
 from src.widgets.canvas import EditorCanvas
@@ -14,8 +19,8 @@ class VectorEditorWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Vector Editor")
-        self.resize(1000, 800)
+        self.setWindowTitle(WINDOW_TITLE)
+        self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         self._init_ui()
 
@@ -50,7 +55,7 @@ class VectorEditorWindow(QMainWindow):
 
         self._setup_layout()
 
-        self.current_tool = "line"
+        self.current_tool = TYPE_LINE
 
         group_action = QAction("Group", self)
         group_action.setShortcut(QKeySequence("Ctrl+G"))
@@ -91,8 +96,8 @@ class VectorEditorWindow(QMainWindow):
         main_layout.setContentsMargins(0, 0, 0, 0)
 
         tools_panel = QFrame()
-        tools_panel.setFixedWidth(120)
-        tools_panel.setStyleSheet("background-color: #f0f0f0;")
+        tools_panel.setFixedWidth(TOOLS_PANEL_WIDTH)
+        tools_panel.setStyleSheet(f"background-color: {PANEL_BG_COLOR};")
 
         tools_layout = QVBoxLayout(tools_panel)
         self.btn_select = QPushButton("Select")
@@ -107,10 +112,10 @@ class VectorEditorWindow(QMainWindow):
 
         self.btn_line.setChecked(True)
 
-        self.btn_select.clicked.connect(lambda: self.on_change_tool("select"))
-        self.btn_line.clicked.connect(lambda: self.on_change_tool("line"))
-        self.btn_rect.clicked.connect(lambda: self.on_change_tool("rect"))
-        self.btn_ellipse.clicked.connect(lambda: self.on_change_tool("ellipse"))
+        self.btn_select.clicked.connect(lambda: self.on_change_tool(TYPE_SELECT))
+        self.btn_line.clicked.connect(lambda: self.on_change_tool(TYPE_LINE))
+        self.btn_rect.clicked.connect(lambda: self.on_change_tool(TYPE_RECT))
+        self.btn_ellipse.clicked.connect(lambda: self.on_change_tool(TYPE_ELLIPSE))
 
         tools_layout.addWidget(self.btn_select)
         tools_layout.addWidget(self.btn_line)
@@ -121,7 +126,7 @@ class VectorEditorWindow(QMainWindow):
         self.canvas = EditorCanvas()
         main_layout.addWidget(tools_panel)
         main_layout.addWidget(self.canvas)
-        self.on_change_tool('line')
+        self.on_change_tool(TYPE_LINE)
 
         self.props_panel = PropertiesPanel(self.canvas.scene, self.canvas.undo_stack)
 
@@ -131,19 +136,18 @@ class VectorEditorWindow(QMainWindow):
 
     def on_change_tool(self, tool_name):
         self.current_tool = tool_name
-        print(f"Выбран инструмент: {tool_name}")
 
-        if tool_name == "line":
+        if tool_name == TYPE_LINE:
             self.btn_select.setChecked(False)
             self.btn_line.setChecked(True)
             self.btn_rect.setChecked(False)
             self.btn_ellipse.setChecked(False)
-        elif tool_name == "rect":
+        elif tool_name == TYPE_RECT:
             self.btn_select.setChecked(False)
             self.btn_line.setChecked(False)
             self.btn_rect.setChecked(True)
             self.btn_ellipse.setChecked(False)
-        elif tool_name == "select":
+        elif tool_name == TYPE_SELECT:
             self.btn_select.setChecked(True)
             self.btn_line.setChecked(False)
             self.btn_rect.setChecked(False)
@@ -157,9 +161,8 @@ class VectorEditorWindow(QMainWindow):
         self.canvas.set_tool(tool_name)
 
     def on_save_clicked(self):
-        filters = "Vector Project (*.json);;PNG Image (*.png);;JPEG Image (*.jpg)"
         filename, selected_filter = QFileDialog.getSaveFileName(
-            self, "Save File", "", filters
+            self, "Save File", "", SAVE_FILTERS
         )
 
         if not filename:
@@ -168,43 +171,25 @@ class VectorEditorWindow(QMainWindow):
         strategy = None
 
         if filename.lower().endswith(".png"):
-            strategy = ImageSaveStrategy("PNG", background_color="transparent")
+            strategy = ImageSaveStrategy("PNG", background_color=BG_COLOR_TRANSPARENT)
         elif filename.lower().endswith(".jpg"):
-            strategy = ImageSaveStrategy("JPG", background_color="white")  # JPG не умеет в прозрачность
+            strategy = ImageSaveStrategy("JPG", background_color=BG_COLOR_WHITE)
         else:
             strategy = JsonSaveStrategy()
 
-        # ВЫПОЛНЕНИЕ
         try:
             strategy.save(filename, self.canvas.scene)
             self.statusBar().showMessage(f"Successfully saved to {filename}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Could not save file:\n{str(e)}")
 
-    def _collect_scene_data(self):
-        project_data = {
-            "version": "1.0",
-            "scene": {
-                "width": self.canvas.scene.width(),
-                "height": self.canvas.scene.height()
-            },
-            "shapes": []
-        }
-
-        items_in_order = self.canvas.scene.items()[::-1]
-
-        for item in items_in_order:
-            if hasattr(item, "to_dict"):
-                project_data["shapes"].append(item.to_dict())
-
-        return project_data
-
     def on_open_clicked(self):
+        from src.constants import PROJECT_FILE_EXTENSIONS
         path, _ = QFileDialog.getOpenFileName(
             self,
             "Открыть проект",
             "",
-            "Vector Project (*.json *.vec)"
+            PROJECT_FILE_EXTENSIONS
         )
 
         if not path:
@@ -225,8 +210,8 @@ class VectorEditorWindow(QMainWindow):
         self.canvas.undo_stack.clear()
 
         scene_info = data.get("scene", {})
-        width = scene_info.get("width", 800)
-        height = scene_info.get("height", 600)
+        width = scene_info.get("width", DEFAULT_SCENE_WIDTH)
+        height = scene_info.get("height", DEFAULT_SCENE_HEIGHT)
         self.canvas.scene.setSceneRect(0, 0, width, height)
 
         shapes_data = data.get("shapes", [])
@@ -241,7 +226,6 @@ class VectorEditorWindow(QMainWindow):
                 self.canvas.scene.addItem(shape_obj)
 
             except Exception as e:
-                print(f"Error loading shape: {e}")
                 errors_count += 1
 
         if errors_count > 0:

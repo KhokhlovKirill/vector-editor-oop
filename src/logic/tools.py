@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGraphicsView
 
+from src.constants import DEFAULT_COLOR
 from src.logic.commands import AddShapeCommand, MoveCommand
 from src.logic.factory import ShapeFactory
 
@@ -23,7 +24,7 @@ class Tool(ABC):
 
 
 class CreationTool(Tool):
-    def __init__(self, view, shape_type, undo_stack, color="black"):
+    def __init__(self, view, shape_type, undo_stack, color=DEFAULT_COLOR):
         super().__init__(view)
         self.shape_type = shape_type
         self.color = color
@@ -61,13 +62,11 @@ class CreationTool(Tool):
             end_pos = self.view.mapToScene(event.pos())
             try:
                 final_shape = ShapeFactory.create_shape(
-                    self.shape_type, self.start_pos, end_pos, "black"
+                    self.shape_type, self.start_pos, end_pos, DEFAULT_COLOR
                 )
 
                 command = AddShapeCommand(self.scene, final_shape)
                 self.undo_stack.push(command)
-
-                print(f"Command pushed: {command.text()}")
 
             except ValueError:
                 pass
