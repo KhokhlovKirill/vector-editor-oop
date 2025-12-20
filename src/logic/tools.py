@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGraphicsView
 
+from src.logic.commands import AddShapeCommand, MoveCommand
 from src.logic.factory import ShapeFactory
 
 
@@ -22,12 +23,13 @@ class Tool(ABC):
 
 
 class CreationTool(Tool):
-    def __init__(self, view, shape_type, color="black"):
+    def __init__(self, view, shape_type, undo_stack, color="black"):
         super().__init__(view)
         self.shape_type = shape_type
         self.color = color
         self.start_pos = None
         self.temp_shape = None
+        self.undo_stack = undo_stack
 
     def mouse_press(self, event):
         if event.button() != Qt.LeftButton:
@@ -53,29 +55,62 @@ class CreationTool(Tool):
 
     def mouse_release(self, event):
         if self.temp_shape and event.button() == Qt.LeftButton:
+            self.scene.removeItem(self.temp_shape)
+            self.temp_shape = None
+
             end_pos = self.view.mapToScene(event.pos())
-            self.temp_shape.set_geometry(self.start_pos, end_pos)
+            try:
+                final_shape = ShapeFactory.create_shape(
+                    self.shape_type, self.start_pos, end_pos, "black"
+                )
+
+                command = AddShapeCommand(self.scene, final_shape)
+                self.undo_stack.push(command)
+
+                print(f"Command pushed: {command.text()}")
+
+            except ValueError:
+                pass
 
             self.start_pos = None
-            self.temp_shape = None
         else:
             QGraphicsView.mouseReleaseEvent(self.view, event)
 
 
 class SelectionTool(Tool):
+    def __init__(self, view, undo_stack):
+        super().__init__(view)
+        self.undo_stack = undo_stack
+
+        self.item_positions = {}
+
     def mouse_press(self, event):
         super(type(self.view), self.view).mousePressEvent(event)
 
+        self.item_positions.clear()
+        for item in self.scene.selectedItems():
+            self.item_positions[item] = item.pos()
+
     def mouse_move(self, event):
-        QGraphicsView.mouseMoveEvent(self.view, event)
-
-        item = self.view.itemAt(event.pos())
-
-        if not (event.buttons() & Qt.LeftButton):
-            if item:
-                self.view.setCursor(Qt.OpenHandCursor)
-            else:
-                self.view.setCursor(Qt.ArrowCursor)
+        super(type(self.view), self.view).mouseMoveEvent(event)
 
     def mouse_release(self, event):
         super(type(self.view), self.view).mouseReleaseEvent(event)
+
+        moved_items = []
+        for item, old_pos in self.item_positions.items():
+            new_pos = item.pos()
+            if new_pos != old_pos:
+                moved_items.append((item, old_pos, new_pos))
+
+        if moved_items:
+            self.undo_stack.beginMacro("Move Items")
+
+            for item, old_pos, new_pos in moved_items:
+                cmd = MoveCommand(item, old_pos, new_pos)
+                self.undo_stack.push(cmd)
+
+            self.undo_stack.endMacro()
+
+        # Очищаем память
+        self.item_positions.clear()

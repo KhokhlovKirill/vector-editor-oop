@@ -43,6 +43,25 @@ class VectorEditorWindow(QMainWindow):
         edit_menu.addAction(group_action)
         edit_menu.addAction(ungroup_action)
 
+        stack = self.canvas.undo_stack
+
+        undo_action = stack.createUndoAction(self, "&Undo")
+        undo_action.setShortcut(QKeySequence.Undo)
+
+        redo_action = stack.createRedoAction(self, "&Redo")
+        redo_action.setShortcut(QKeySequence.Redo)
+
+        delete_action = QAction("Delete", self)
+        delete_action.setShortcut("Delete")
+        delete_action.triggered.connect(self.canvas.delete_selected)
+
+        self.menuBar().addAction(delete_action)
+        self.addAction(delete_action)
+
+        edit_menu = self.menuBar().addMenu("&Edit")
+        edit_menu.addAction(undo_action)
+        edit_menu.addAction(redo_action)
+
     def _setup_layout(self):
         container = QWidget()
         self.setCentralWidget(container)
@@ -83,7 +102,7 @@ class VectorEditorWindow(QMainWindow):
         main_layout.addWidget(self.canvas)
         self.on_change_tool('line')
 
-        self.props_panel = PropertiesPanel(self.canvas.scene)
+        self.props_panel = PropertiesPanel(self.canvas.scene, self.canvas.undo_stack)
 
         main_layout.addWidget(self.props_panel)
 
