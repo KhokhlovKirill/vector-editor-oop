@@ -27,7 +27,7 @@ class Rectangle(Shape):
     def to_dict(self) -> dict:
         return {
             "type": self.type_name,
-            "pos": [self.x(), self.y()],
+            "pos": [self.pos().x(), self.pos().y()],
             "props": {
                 "x": self.rect().x(),
                 "y": self.rect().y(),

@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QVBoxLa
 from PySide6.QtGui import QAction, QKeySequence
 
 from src.widgets.canvas import EditorCanvas
+from src.widgets.properties import PropertiesPanel
 
 
 class VectorEditorWindow(QMainWindow):
@@ -81,6 +82,10 @@ class VectorEditorWindow(QMainWindow):
         main_layout.addWidget(tools_panel)
         main_layout.addWidget(self.canvas)
         self.on_change_tool('line')
+
+        self.props_panel = PropertiesPanel(self.canvas.scene)
+
+        main_layout.addWidget(self.props_panel)
 
 
 

@@ -42,6 +42,11 @@ class Shape(QGraphicsPathItem):
         pen.setColor(QColor(color))
         self.setPen(pen)
 
+    def set_stroke_width(self, width: int):
+        pen = self.pen()
+        pen.setWidth(width)
+        self.setPen(pen)
+
     @abstractmethod
     def set_geometry(self, start_point: QPointF, end_point: QPointF):
         """

@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsItem
 from PySide6.QtCore import QPointF
 
+from src.logic.Shape import Shape
+
 
 class Group(QGraphicsItemGroup):
     def __init__(self):
@@ -19,14 +21,14 @@ class Group(QGraphicsItemGroup):
         pass
 
     def set_active_color(self, color: str):
-        """
-        Рекурсивно меняет цвет всех детей.
-        Внешний код (Canvas) просто вызывает group.set_active_color("red"),
-        не зная, что внутри 50 объектов.
-        """
         for child in self.childItems():
             if hasattr(child, 'set_active_color'):
                 child.set_active_color(color)
+
+    def set_stroke_width(self, width: int):
+        for child in self.childItems():
+            if isinstance(child, Shape):
+                child.set_stroke_width(width)
 
     def to_dict(self) -> dict:
         """
