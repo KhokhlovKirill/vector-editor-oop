@@ -36,7 +36,6 @@ class PropertiesPanel(QWidget):
         self.spin_width.valueChanged.connect(self.on_width_changed)
         layout.addWidget(self.spin_width)
 
-        layout.addWidget(QLabel("Цвет линии:"))
         self.btn_color = QPushButton("Pick Color")
         self.btn_color.setFixedHeight(30)
         self.btn_color.clicked.connect(self.on_color_clicked)
@@ -53,11 +52,13 @@ class PropertiesPanel(QWidget):
         self.spin_y.setPrefix("Y: ")
         self.spin_y.valueChanged.connect(self.on_geo_changed)
 
-        geo_layout.addWidget(self.spin_x)
-        geo_layout.addWidget(self.spin_y)
         layout.addLayout(geo_layout)
 
+        layout.addWidget(QLabel("Цвет линии:"))
+
         layout.addWidget(self.btn_color)
+        geo_layout.addWidget(self.spin_x)
+        geo_layout.addWidget(self.spin_y)
 
         layout.addStretch()
 

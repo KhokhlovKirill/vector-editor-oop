@@ -1,6 +1,11 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QVBoxLayout, QPushButton
+import json
+
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QVBoxLayout, QPushButton, QFileDialog, \
+    QMessageBox
 from PySide6.QtGui import QAction, QKeySequence
 
+from src.logic.factory import ShapeFactory
+from src.logic.strategies import ImageSaveStrategy, JsonSaveStrategy
 from src.widgets.canvas import EditorCanvas
 from src.widgets.properties import PropertiesPanel
 
@@ -20,11 +25,27 @@ class VectorEditorWindow(QMainWindow):
         menubar = self.menuBar()
         file_menu = menubar.addMenu("&File")
 
-        exit_action = QAction("Exit", self)
+        # Действие "Открыть"
+        open_action = QAction("&Open", self)
+        open_action.setShortcut(QKeySequence.Open)
+        open_action.setStatusTip("Open an existing file")
+        open_action.triggered.connect(self.on_open_clicked)
+        file_menu.addAction(open_action)
+
+        # Действие "Сохранить"
+        save_action = QAction("&Save", self)
+        save_action.setShortcut(QKeySequence.Save)
+        save_action.setStatusTip("Save the current file")
+        save_action.triggered.connect(self.on_save_clicked)
+        file_menu.addAction(save_action)
+
+        file_menu.addSeparator()
+
+        # Действие "Выход"
+        exit_action = QAction("E&xit", self)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.setStatusTip("Close the application")
         exit_action.triggered.connect(self.close)
-
         file_menu.addAction(exit_action)
 
         self._setup_layout()
@@ -134,3 +155,96 @@ class VectorEditorWindow(QMainWindow):
             self.btn_ellipse.setChecked(True)
 
         self.canvas.set_tool(tool_name)
+
+    def on_save_clicked(self):
+        filters = "Vector Project (*.json);;PNG Image (*.png);;JPEG Image (*.jpg)"
+        filename, selected_filter = QFileDialog.getSaveFileName(
+            self, "Save File", "", filters
+        )
+
+        if not filename:
+            return
+
+        strategy = None
+
+        if filename.lower().endswith(".png"):
+            strategy = ImageSaveStrategy("PNG", background_color="transparent")
+        elif filename.lower().endswith(".jpg"):
+            strategy = ImageSaveStrategy("JPG", background_color="white")  # JPG не умеет в прозрачность
+        else:
+            strategy = JsonSaveStrategy()
+
+        # ВЫПОЛНЕНИЕ
+        try:
+            strategy.save(filename, self.canvas.scene)
+            self.statusBar().showMessage(f"Successfully saved to {filename}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Could not save file:\n{str(e)}")
+
+    def _collect_scene_data(self):
+        project_data = {
+            "version": "1.0",
+            "scene": {
+                "width": self.canvas.scene.width(),
+                "height": self.canvas.scene.height()
+            },
+            "shapes": []
+        }
+
+        items_in_order = self.canvas.scene.items()[::-1]
+
+        for item in items_in_order:
+            if hasattr(item, "to_dict"):
+                project_data["shapes"].append(item.to_dict())
+
+        return project_data
+
+    def on_open_clicked(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Открыть проект",
+            "",
+            "Vector Project (*.json *.vec)"
+        )
+
+        if not path:
+            return
+
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            if "version" not in data or "shapes" not in data:
+                raise ValueError("Некорректный формат файла")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка загрузки", f"Не удалось прочитать файл:\n{e}")
+            return
+
+        self.canvas.scene.clear()
+        self.canvas.undo_stack.clear()
+
+        scene_info = data.get("scene", {})
+        width = scene_info.get("width", 800)
+        height = scene_info.get("height", 600)
+        self.canvas.scene.setSceneRect(0, 0, width, height)
+
+        shapes_data = data.get("shapes", [])
+
+        errors_count = 0
+
+        for shape_dict in shapes_data:
+            try:
+                shape_obj = ShapeFactory.from_dict(shape_dict)
+
+                # Добавляем на сцену
+                self.canvas.scene.addItem(shape_obj)
+
+            except Exception as e:
+                print(f"Error loading shape: {e}")
+                errors_count += 1
+
+        if errors_count > 0:
+            self.statusBar().showMessage(f"Загружено с ошибками ({errors_count} фигур пропущено)")
+        else:
+            self.statusBar().showMessage(f"Проект загружен: {path}")
