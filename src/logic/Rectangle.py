@@ -32,11 +32,12 @@ class Rectangle(Shape):
             "type": self.type_name,
             "pos": [self.pos().x(), self.pos().y()],
             "props": {
-                "x": self.rect().x(),
-                "y": self.rect().y(),
-                "w": self.rect().width(),
-                "h": self.rect().height(),
-                "color": self.pen().color().name()
+                "x": self.x,
+                "y": self.y,
+                "w": self.w,
+                "h": self.h,
+                "color": self.pen().color().name(),
+                "stroke_width": self.pen().width()
             }
         }
 
