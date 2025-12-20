@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QVBoxLayout, QPushButton
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 
 from src.widgets.canvas import EditorCanvas
 
@@ -29,6 +29,18 @@ class VectorEditorWindow(QMainWindow):
         self._setup_layout()
 
         self.current_tool = "line"
+
+        group_action = QAction("Group", self)
+        group_action.setShortcut(QKeySequence("Ctrl+G"))
+        group_action.triggered.connect(self.canvas.group_selection)
+
+        ungroup_action = QAction("Ungroup", self)
+        ungroup_action.setShortcut(QKeySequence("Ctrl+U"))
+        ungroup_action.triggered.connect(self.canvas.ungroup_selection)
+
+        edit_menu = self.menuBar().addMenu("&Edit")
+        edit_menu.addAction(group_action)
+        edit_menu.addAction(ungroup_action)
 
     def _setup_layout(self):
         container = QWidget()

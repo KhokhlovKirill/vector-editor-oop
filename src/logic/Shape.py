@@ -37,9 +37,10 @@ class Shape(QGraphicsPathItem):
 
 
     def set_active_color(self, color: str):
-        """Динамическое изменение цвета"""
         self.color = color
-        self._setup_pen()
+        pen = self.pen()
+        pen.setColor(QColor(color))
+        self.setPen(pen)
 
     @abstractmethod
     def set_geometry(self, start_point: QPointF, end_point: QPointF):

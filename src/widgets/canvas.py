@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter
 
+from src.logic.Group import Group
 from src.logic.factory import ShapeFactory
 from src.logic.tools import SelectionTool, CreationTool
 
@@ -47,4 +48,30 @@ class EditorCanvas(QGraphicsView):
     def mouseReleaseEvent(self, event):
         self.active_tool.mouse_release(event)
 
+    def group_selection(self):
+        """Создает группу из выделенных элементов"""
+        selected_items = self.scene.selectedItems()
 
+        if not selected_items:
+            return
+
+        group = Group()
+
+        self.scene.addItem(group)
+
+        for item in selected_items:
+            item.setSelected(False)
+
+            group.addToGroup(item)
+
+        group.setSelected(True)
+        print("Группа создана")
+
+    def ungroup_selection(self):
+        """Разбивает выделенные группы на отдельные элементы"""
+        selected_items = self.scene.selectedItems()
+
+        for item in selected_items:
+            if isinstance(item, Group):
+                self.scene.destroyGroup(item)
+                print("Группа расформирована")

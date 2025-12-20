@@ -27,11 +27,13 @@ class Rectangle(Shape):
     def to_dict(self) -> dict:
         return {
             "type": self.type_name,
+            "pos": [self.x(), self.y()],
             "props": {
-                "x": self.x, "y": self.y,
-                "w": self.w, "h": self.h,
-                "color": self.pen().color().name(),
-                "stroke_width": self.pen().width()
+                "x": self.rect().x(),
+                "y": self.rect().y(),
+                "w": self.rect().width(),
+                "h": self.rect().height(),
+                "color": self.pen().color().name()
             }
         }
 
